@@ -1,26 +1,34 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:login/config/page_router.dart';
 import 'package:login/view/signup_page.dart';
 import '../config/config.dart' as conf;
 import '../config/config.dart';
-import '../cubit/cubit.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bloc/bloc.dart';
 
-class LoginApp extends StatefulWidget {
+import '../cubit/cubit.dart';
+
+class SigninPage extends StatefulWidget {
+  const SigninPage(
+      {Key? key,
+      required this.signinFormKey,
+      required this.signinEmailController,
+      required this.signinPasswordController})
+      : super(key: key);
+
+  final GlobalKey<FormState>? signinFormKey;
+
+  final TextEditingController? signinEmailController;
+
+  final TextEditingController? signinPasswordController;
+
   @override
-  State<LoginApp> createState() => _LoginAppState();
+  State<SigninPage> createState() => _SigninPageState();
 }
 
-class _LoginAppState extends State<LoginApp> {
-  final GlobalKey<FormState> signinFormKey = GlobalKey();
-
-  final TextEditingController emailController = TextEditingController();
-
-  final TextEditingController passwordController = TextEditingController();
-
-  final FocusNode emailFocus = FocusNode();
-
+class _SigninPageState extends State<SigninPage> {
   Color _emailIconColor = conf.editTextFieldsIconColorPassive;
 
   Color _passwordIconColor = conf.editTextFieldsIconColorPassive;
@@ -40,7 +48,7 @@ class _LoginAppState extends State<LoginApp> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Form(
-        key: signinFormKey,
+        key: widget.signinFormKey,
         child: Container(
           decoration: const BoxDecoration(
             gradient: RadialGradient(
@@ -58,65 +66,167 @@ class _LoginAppState extends State<LoginApp> {
           ),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 20.0,
-                  top: conf.topInset,
-                ),
-                child: SizedBox(
-                  height: 150,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding:
-                          EdgeInsets.fromLTRB(conf.leftRightInset, 50, 0, 0),
-                      child: const Text(
-                        'Sign In',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 40,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              //Sign In Header
+              _signInHeader(),
               _fields(),
               _forgotPassword(),
               _signInButton(context),
               //OR text
-              Padding(
-                padding: const EdgeInsets.only(top: 20.0),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: conf.leftRightInset,
-                          right: 8,
-                        ),
-                        child: const Divider(),
-                      ),
-                    ),
-                    const Text("OR"),
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            left: 8, right: conf.leftRightInset),
-                        child: const Divider(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _or(),
               //google sign in
               _signInWithGoogle(),
               const Spacer(),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 50),
-                child: _signUp(),
-              ),
+              _signUp(),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  _signInHeader() {
+    return Padding(
+      padding: const EdgeInsets.only(
+        bottom: 20.0,
+        top: conf.topInset,
+      ),
+      child: SizedBox(
+        height: 150,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(conf.leftRightInset, 50, 0, 0),
+            child: const Text(
+              'Sign In',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 40,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  _or() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20.0),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: conf.leftRightInset,
+                right: 8,
+              ),
+              child: const Divider(),
+            ),
+          ),
+          const Text("OR"),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(left: 8, right: conf.leftRightInset),
+              child: const Divider(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  _emailField() {
+    return SizedBox(
+      height: conf.textFieldHeight,
+      width: conf.textFieldWidth,
+      child: Focus(
+        onFocusChange: ((value) {
+          setState(() {
+            _emailIconColor = value
+                ? conf.editTextFieldsIconColorActive
+                : conf.editTextFieldsIconColorPassive;
+          });
+        }),
+        child: CupertinoTextField(
+          controller: widget.signinEmailController,
+          placeholder: 'E-Mail',
+          onTap: () {},
+          onSubmitted: (text) {
+            // setState(() {
+            //   _emailIconColor = conf.editTextFieldsIconColorPassive;
+            // });
+          },
+          keyboardType: TextInputType.emailAddress,
+          prefix: Padding(
+            padding: const EdgeInsets.fromLTRB(15.0, 8, 8, 8),
+            child: Icon(
+              conf.emailIcon,
+              color: _emailIconColor,
+            ),
+          ),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
+    );
+  }
+
+  _passwordField() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: SizedBox(
+        height: conf.textFieldHeight,
+        width: conf.textFieldWidth,
+        child: Focus(
+          onFocusChange: ((value) {
+            setState(() {
+              _passwordIconColor = value
+                  ? conf.editTextFieldsIconColorActive
+                  : conf.editTextFieldsIconColorPassive;
+            });
+          }),
+          child: CupertinoTextField(
+            controller: widget.signinPasswordController,
+            placeholder: 'Password',
+            obscureText: !_showPassword,
+            onTap: () {},
+            onSubmitted: (text) {
+              // setState(() {
+              //   _passwordIconColor = conf.editTextFieldsIconColorPassive;
+              // });
+            },
+            keyboardType: TextInputType.visiblePassword,
+            prefix: Padding(
+              padding: const EdgeInsets.fromLTRB(15.0, 8, 8, 8),
+              child: Icon(
+                conf.passwordIcon,
+                color: _passwordIconColor,
+              ),
+            ),
+            //show password
+            suffix: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _showPassword = !_showPassword;
+                  _showIconColor = _showPassword
+                      ? conf.editTextFieldsIconColorActive
+                      : conf.editTextFieldsIconColorPassive;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 15, 8),
+                child: Icon(
+                  conf.showPasswordIcon,
+                  color: _showIconColor,
+                ),
+              ),
+            ),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
       ),
@@ -127,91 +237,9 @@ class _LoginAppState extends State<LoginApp> {
     return Column(
       children: [
         //email
-        SizedBox(
-          height: conf.textFieldHeight,
-          width: conf.textFieldWidth,
-          child: CupertinoTextField(
-            controller: emailController,
-            focusNode: emailFocus,
-            placeholder: 'E-Mail',
-            onTap: () {
-              // setState(() {
-              //   _emailIconColor = conf.editTextFieldsIconColorActive;
-              //   _passwordIconColor = conf.editTextFieldsIconColorPassive;
-              // });
-            },
-            onSubmitted: (text) {
-              // setState(() {
-              //   _emailIconColor = conf.editTextFieldsIconColorPassive;
-              // });
-            },
-            keyboardType: TextInputType.emailAddress,
-            prefix: Padding(
-              padding: const EdgeInsets.fromLTRB(15.0, 8, 8, 8),
-              child: Icon(
-                conf.emailIcon,
-                color: _emailIconColor,
-              ),
-            ),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        ),
+        _emailField(),
         //password
-        Padding(
-          padding: const EdgeInsets.only(top: 20),
-          child: SizedBox(
-            height: conf.textFieldHeight,
-            width: conf.textFieldWidth,
-            child: CupertinoTextField(
-              controller: passwordController,
-              placeholder: 'Password',
-              obscureText: !_showPassword,
-              onTap: () {
-                // setState(() {
-                //   _emailIconColor = conf.editTextFieldsIconColorPassive;
-                //   _passwordIconColor = conf.editTextFieldsIconColorActive;
-                // });
-              },
-              onSubmitted: (text) {
-                // setState(() {
-                //   _passwordIconColor = conf.editTextFieldsIconColorPassive;
-                // });
-              },
-              keyboardType: TextInputType.visiblePassword,
-              prefix: Padding(
-                padding: const EdgeInsets.fromLTRB(15.0, 8, 8, 8),
-                child: Icon(
-                  conf.passwordIcon,
-                  color: _passwordIconColor,
-                ),
-              ),
-              suffix: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 15, 8),
-                child: GestureDetector(
-                  child: Icon(
-                    conf.showPasswordIcon,
-                    color: _showIconColor,
-                  ),
-                  onTap: () {
-                    // setState(() {
-                    //   _showPassword = !_showPassword;
-                    //   _showIconColor = _showPassword
-                    //       ? conf.editTextFieldsIconColorActive
-                    //       : conf.editTextFieldsIconColorPassive;
-                    // });
-                  },
-                ),
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ),
+        _passwordField(),
       ],
     );
   }
@@ -235,23 +263,64 @@ class _LoginAppState extends State<LoginApp> {
   }
 
   _signInButton(BuildContext context) {
-    return SizedBox(
-      height: conf.textFieldHeight,
-      width: conf.textFieldWidth,
-      child: CupertinoButton(
-        onPressed: () {},
-        child: const Text(
-          'Log In',
-          style: TextStyle(
-            fontSize: 16,
-            color: conf.mainColor,
-            fontWeight: FontWeight.bold,
+    return BlocConsumer<LoginCubit, LoginState>(
+      listener: (context, state) {},
+      builder: (context, state) {
+        return CupertinoButton(
+          onPressed: context.watch<LoginCubit>().isLoading
+              ? null
+              : () {
+                  context.read<LoginCubit>().getUserModel();
+                },
+          child: Stack(
+            children: [
+              Visibility(
+                visible: context.watch<LoginCubit>().isLoading,
+                child: Container(
+                  alignment: Alignment.center,
+                  height: conf.textFieldHeight,
+                  width: conf.textFieldWidth,
+                  decoration: BoxDecoration(
+                    color: conf.secondaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(5.0),
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              Visibility(
+                visible: !context.watch<LoginCubit>().isLoading,
+                child: Container(
+                  alignment: Alignment.center,
+                  height: conf.textFieldHeight,
+                  width: conf.textFieldWidth,
+                  decoration: BoxDecoration(
+                    color: conf.secondaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'Sign In',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: conf.mainColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
-        color: conf.secondaryColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
+          padding: const EdgeInsets.symmetric(
+            vertical: 0,
+            horizontal: 0,
+          ),
+          borderRadius: BorderRadius.circular(10),
+        );
+      },
     );
   }
 
@@ -271,38 +340,37 @@ class _LoginAppState extends State<LoginApp> {
   }
 
   _signUp() {
-    return CupertinoButton(
-      onPressed: () {
-        PageRouter.changePageWithAnimation(
-          context,
-          SignUp(),
-          PageRouter.downToUp,
-        );
-      },
-      child: Container(
-        height: conf.textFieldHeight,
-        width: conf.textFieldWidth,
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            width: 1.5,
-            color: conf.secondaryColor,
-          ),
-        ),
-        child: const Center(
-          child: Text(
-            'Sign Up',
-            style: TextStyle(
-              fontSize: 16,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 50),
+      child: CupertinoButton(
+        onPressed: () {
+          context.read<LoginCubit>().navigateToSignup();
+        },
+        child: Container(
+          height: conf.textFieldHeight,
+          width: conf.textFieldWidth,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              width: 1.5,
               color: conf.secondaryColor,
-              fontWeight: FontWeight.bold,
+            ),
+          ),
+          child: const Center(
+            child: Text(
+              'Sign Up',
+              style: TextStyle(
+                fontSize: 16,
+                color: conf.secondaryColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
+        padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+        borderRadius: BorderRadius.circular(10),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
-      borderRadius: BorderRadius.circular(10),
     );
   }
 }

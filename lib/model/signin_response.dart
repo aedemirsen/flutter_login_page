@@ -1,11 +1,11 @@
-class SignInResponse {
+class SigninResponse {
   String? email;
   String? password;
   String? id;
 
-  SignInResponse({this.email, this.password, this.id});
+  SigninResponse({this.email, this.password, this.id});
 
-  SignInResponse.fromJson(Map<String, dynamic> json) {
+  SigninResponse.fromJson(Map<String, dynamic> json) {
     email = json['email'];
     password = json['password'];
     id = json['id'];

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:login/model/signin_response.dart';
 import 'package:login/model/signup_response.dart';
+import 'package:login/model/user.dart';
 
 abstract class IService {
   final Dio dio;
@@ -9,7 +10,7 @@ abstract class IService {
 
   final String endpoint = "/users";
 
-  Future<SignInResponse?> getUserSignIn(SignInResponse model);
+  Future<SigninResponse?> getUserSignIn(User model);
 
   Future<SignUpResponse?> postUserSignUp(SignUpResponse model);
 }

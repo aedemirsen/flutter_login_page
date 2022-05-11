@@ -4,6 +4,8 @@ import 'package:login/model/signup_response.dart';
 import 'package:bloc/bloc.dart';
 import 'package:login/service/IService.dart';
 
+import '../model/user.dart';
+
 class LoginCubit extends Cubit<LoginState> {
   //sign in
   final TextEditingController signInMailController;
@@ -16,7 +18,7 @@ class LoginCubit extends Cubit<LoginState> {
   final GlobalKey<FormState> signupFormKey;
 
   //service
-  final IService signinService;
+  final IService service;
 
   bool isLoginFail = false;
   bool isLoading = false;
@@ -29,7 +31,7 @@ class LoginCubit extends Cubit<LoginState> {
       this.signUpPasswordController,
       this.signinFormKey,
       this.signupFormKey,
-      this.signinService)
+      {required this.service})
       : super(initialState);
 
   Future<void> postUserModel() async {
@@ -50,13 +52,44 @@ class LoginCubit extends Cubit<LoginState> {
     // }
   }
 
-  void changeLoadingView() {
-    isLoading = !isLoading;
+  Future<void> getUserModel() async {
+    if (signinFormKey.currentState !=
+            null /*&&
+        signupFormKey.currentState!.validate()*/
+        ) {
+      changeLoadingView(true);
+      final data = await service.getUserSignIn(
+        User(
+          email: signInMailController.text,
+          password: signInPasswordController.text,
+        ),
+      );
+      changeLoadingView(false);
+
+      if (data is SigninResponse) {
+        emit(SigninSuccessful(data));
+      }
+    } else {
+      isLoginFail = true;
+      emit(ValidationState(isLoginFail));
+    }
+  }
+
+  void changeLoadingView(bool b) {
+    isLoading = b;
     emit(LoadingState(isLoading));
+  }
+
+  void navigateToSignup() {
+    emit(SignupState());
   }
 }
 
 abstract class LoginState {}
+
+class SigninState extends LoginState {}
+
+class SignupState extends LoginState {}
 
 class ValidationState extends LoginState {
   final bool validationSuccess;
@@ -71,7 +104,7 @@ class LoadingState extends LoginState {
 }
 
 class SigninSuccessful extends LoginState {
-  final SignInResponse model;
+  final SigninResponse model;
 
   SigninSuccessful(this.model);
 }

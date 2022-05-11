@@ -5,6 +5,7 @@ class AppConfig {
   static double screenWidth = 0, screenHeight = 0;
 }
 
+const String baseUrl = 'https://627801146ac99a9106533360.mockapi.io/api';
 const double topInset = 75;
 const double loginButtonHeight = 50;
 final double loginButtonWidth = (textFieldWidth - 30) / 2;
