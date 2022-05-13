@@ -4,74 +4,65 @@ import 'package:login/model/signup_response.dart';
 import 'package:bloc/bloc.dart';
 import 'package:login/service/IService.dart';
 
+import '../model/signup_request.dart';
 import '../model/user.dart';
 
 class LoginCubit extends Cubit<LoginState> {
-  //sign in
-  final TextEditingController signInMailController;
-  final TextEditingController signInPasswordController;
-  //sign up
-  final TextEditingController signUpMailController;
-  final TextEditingController signUpPasswordController;
-  //form keys
-  final GlobalKey<FormState> signinFormKey;
-  final GlobalKey<FormState> signupFormKey;
-
   //service
   final IService service;
 
-  bool isLoginFail = false;
+  bool isSigninFail = false;
+  bool isSignupFail = false;
   bool isLoading = false;
 
-  LoginCubit(
-      LoginState initialState,
-      this.signInMailController,
-      this.signInPasswordController,
-      this.signUpMailController,
-      this.signUpPasswordController,
-      this.signinFormKey,
-      this.signupFormKey,
-      {required this.service})
+  LoginCubit(LoginState initialState, {required this.service})
       : super(initialState);
 
-  Future<void> postUserModel() async {
-    // if (signinFormKey.currentState != null &&
-    //     signupFormKey.currentState!.validate()) {
-    //   changeLoadingView();
-    //   final data = await service.postUserLogin(LoginRequest(
-    //       email: emailController.text.trim(),
-    //       password: passwordController.text.trim()));
-    //   changeLoadingView();
-
-    //   if (data is LoginResponse) {
-    //     emit(LoginSuccess(data));
-    //   }
-    // } else {
-    //   isLoginFail = true;
-    //   emit(LoginValidateState(isLoginFail));
-    // }
+  Future<void> postUserModel(
+    GlobalKey<FormState> signupFormKey,
+    String mail,
+    String password,
+  ) async {
+    if (signupFormKey.currentState!.validate()) {
+      changeLoadingView(true);
+      final data = await service.postUserSignUp(
+        SignupRequest(email: mail, password: password),
+      );
+      changeLoadingView(false);
+      if (data is SignUpResponse) {
+        emit(SignupSuccessful(data));
+      } else if (data == null) {
+        emit(SignupFail());
+      }
+    } else {
+      isSignupFail = true;
+      emit(ValidationState(isSignupFail));
+    }
   }
 
-  Future<void> getUserModel() async {
-    if (signinFormKey.currentState !=
-            null /*&&
-        signupFormKey.currentState!.validate()*/
-        ) {
+  Future<void> getUserModel(
+    GlobalKey<FormState> signinFormKey,
+    String mail,
+    String password,
+  ) async {
+    if (signinFormKey.currentState!.validate()) {
       changeLoadingView(true);
       final data = await service.getUserSignIn(
         User(
-          email: signInMailController.text,
-          password: signInPasswordController.text,
+          email: mail,
+          password: password,
         ),
       );
       changeLoadingView(false);
 
       if (data is SigninResponse) {
         emit(SigninSuccessful(data));
+      } else if (data == null) {
+        emit(SigninFail());
       }
     } else {
-      isLoginFail = true;
-      emit(ValidationState(isLoginFail));
+      isSigninFail = true;
+      emit(ValidationState(isSigninFail));
     }
   }
 
@@ -108,6 +99,10 @@ class SigninSuccessful extends LoginState {
 
   SigninSuccessful(this.model);
 }
+
+class SigninFail extends LoginState {}
+
+class SignupFail extends LoginState {}
 
 class SignupSuccessful extends LoginState {
   final SignUpResponse model;

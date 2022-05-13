@@ -1,3 +1,4 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,26 +10,22 @@ import '../config/config.dart';
 import 'package:bloc/bloc.dart';
 
 import '../cubit/cubit.dart';
+import 'landing_page.dart';
 
 class SigninPage extends StatefulWidget {
-  const SigninPage(
-      {Key? key,
-      required this.signinFormKey,
-      required this.signinEmailController,
-      required this.signinPasswordController})
-      : super(key: key);
-
-  final GlobalKey<FormState>? signinFormKey;
-
-  final TextEditingController? signinEmailController;
-
-  final TextEditingController? signinPasswordController;
+  const SigninPage({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<SigninPage> createState() => _SigninPageState();
 }
 
 class _SigninPageState extends State<SigninPage> {
+  final TextEditingController signInMailController = TextEditingController();
+  final TextEditingController signInPasswordController =
+      TextEditingController();
+  final GlobalKey<FormState> signinFormKey = GlobalKey();
   Color _emailIconColor = conf.editTextFieldsIconColorPassive;
 
   Color _passwordIconColor = conf.editTextFieldsIconColorPassive;
@@ -48,7 +45,8 @@ class _SigninPageState extends State<SigninPage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Form(
-        key: widget.signinFormKey,
+        autovalidateMode: AutovalidateMode.always,
+        key: signinFormKey,
         child: Container(
           decoration: const BoxDecoration(
             gradient: RadialGradient(
@@ -70,13 +68,13 @@ class _SigninPageState extends State<SigninPage> {
               _signInHeader(),
               _fields(),
               _forgotPassword(),
-              _signInButton(context),
+              _signInButton(),
               //OR text
               _or(),
               //google sign in
               _signInWithGoogle(),
               const Spacer(),
-              _signUp(),
+              _signUp(context),
             ],
           ),
         ),
@@ -136,9 +134,12 @@ class _SigninPageState extends State<SigninPage> {
   }
 
   _emailField() {
-    return SizedBox(
-      height: conf.textFieldHeight,
-      width: conf.textFieldWidth,
+    return Padding(
+      padding: EdgeInsets.only(
+        top: 20,
+        left: conf.leftRightInset,
+        right: conf.leftRightInset,
+      ),
       child: Focus(
         onFocusChange: ((value) {
           setState(() {
@@ -147,26 +148,25 @@ class _SigninPageState extends State<SigninPage> {
                 : conf.editTextFieldsIconColorPassive;
           });
         }),
-        child: CupertinoTextField(
-          controller: widget.signinEmailController,
-          placeholder: 'E-Mail',
-          onTap: () {},
-          onSubmitted: (text) {
-            // setState(() {
-            //   _emailIconColor = conf.editTextFieldsIconColorPassive;
-            // });
-          },
+        child: TextFormField(
+          validator: (value) => EmailValidator.validate(value!)
+              ? null
+              : "Please enter a valid email",
+          controller: signInMailController,
           keyboardType: TextInputType.emailAddress,
-          prefix: Padding(
-            padding: const EdgeInsets.fromLTRB(15.0, 8, 8, 8),
-            child: Icon(
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.zero,
+            prefixIcon: Icon(
               conf.emailIcon,
               color: _emailIconColor,
             ),
-          ),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(10),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            hintText: "E-Mail",
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
       ),
@@ -175,38 +175,33 @@ class _SigninPageState extends State<SigninPage> {
 
   _passwordField() {
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: SizedBox(
-        height: conf.textFieldHeight,
-        width: conf.textFieldWidth,
-        child: Focus(
-          onFocusChange: ((value) {
-            setState(() {
-              _passwordIconColor = value
-                  ? conf.editTextFieldsIconColorActive
-                  : conf.editTextFieldsIconColorPassive;
-            });
-          }),
-          child: CupertinoTextField(
-            controller: widget.signinPasswordController,
-            placeholder: 'Password',
-            obscureText: !_showPassword,
-            onTap: () {},
-            onSubmitted: (text) {
-              // setState(() {
-              //   _passwordIconColor = conf.editTextFieldsIconColorPassive;
-              // });
-            },
-            keyboardType: TextInputType.visiblePassword,
-            prefix: Padding(
-              padding: const EdgeInsets.fromLTRB(15.0, 8, 8, 8),
-              child: Icon(
-                conf.passwordIcon,
-                color: _passwordIconColor,
-              ),
+      padding: EdgeInsets.only(
+        top: 20,
+        left: conf.leftRightInset,
+        right: conf.leftRightInset,
+      ),
+      child: Focus(
+        onFocusChange: ((value) {
+          setState(() {
+            _passwordIconColor = value
+                ? conf.editTextFieldsIconColorActive
+                : conf.editTextFieldsIconColorPassive;
+          });
+        }),
+        child: TextFormField(
+          validator: (value) =>
+              (value ?? "").length > 8 ? null : 'Length must be greater than 8',
+          controller: signInPasswordController,
+          keyboardType: TextInputType.visiblePassword,
+          obscureText: !_showPassword,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.zero,
+            prefixIcon: Icon(
+              conf.passwordIcon,
+              color: _passwordIconColor,
             ),
             //show password
-            suffix: GestureDetector(
+            suffixIcon: GestureDetector(
               onTap: () {
                 setState(() {
                   _showPassword = !_showPassword;
@@ -223,8 +218,11 @@ class _SigninPageState extends State<SigninPage> {
                 ),
               ),
             ),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.15),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            hintText: "Password",
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -262,15 +260,34 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 
-  _signInButton(BuildContext context) {
+  _signInButton() {
     return BlocConsumer<LoginCubit, LoginState>(
-      listener: (context, state) {},
+      listener: (context, state) {
+        if (state is SigninSuccessful) {
+          PageRouter.changePageWithAnimation(
+            context,
+            LandingPage(
+              model: state.model,
+            ),
+            PageRouter.leftToRight,
+          );
+        } else if (state is SigninFail) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text('E-mail or Password is not correct!'),
+            action: SnackBarAction(
+              label: 'Close',
+              onPressed: () {},
+            ),
+          ));
+        }
+      },
       builder: (context, state) {
         return CupertinoButton(
           onPressed: context.watch<LoginCubit>().isLoading
               ? null
               : () {
-                  context.read<LoginCubit>().getUserModel();
+                  context.read<LoginCubit>().getUserModel(signinFormKey,
+                      signInMailController.text, signInPasswordController.text);
                 },
           child: Stack(
             children: [
@@ -339,12 +356,17 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 
-  _signUp() {
+  _signUp(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 50),
       child: CupertinoButton(
         onPressed: () {
-          context.read<LoginCubit>().navigateToSignup();
+          PageRouter.changePageWithAnimation(
+            context,
+            const SignupPage(),
+            PageRouter.downToUp,
+          );
+          //context.read<LoginCubit>().navigateToSignup();
         },
         child: Container(
           height: conf.textFieldHeight,
