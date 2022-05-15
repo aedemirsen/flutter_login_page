@@ -1,21 +1,26 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:login/model/google_signin_response.dart';
 import 'package:login/model/signin_response.dart';
 import 'package:login/model/signup_response.dart';
 import 'package:bloc/bloc.dart';
 import 'package:login/service/IService.dart';
 
+import '../model/google_signin_response.dart';
 import '../model/signup_request.dart';
-import '../model/user.dart';
+import '../model/user.dart' as user;
 
 class LoginCubit extends Cubit<LoginState> {
   //service
   final IService service;
+  final FirebaseAuth firebaseAuth;
 
   bool isSigninFail = false;
   bool isSignupFail = false;
   bool isLoading = false;
 
-  LoginCubit(LoginState initialState, {required this.service})
+  LoginCubit(LoginState initialState,
+      {required this.service, required this.firebaseAuth})
       : super(initialState);
 
   Future<void> postUserModel(
@@ -48,7 +53,7 @@ class LoginCubit extends Cubit<LoginState> {
     if (signinFormKey.currentState!.validate()) {
       changeLoadingView(true);
       final data = await service.getUserSignIn(
-        User(
+        user.User(
           email: mail,
           password: password,
         ),
@@ -63,6 +68,16 @@ class LoginCubit extends Cubit<LoginState> {
     } else {
       isSigninFail = true;
       emit(ValidationState(isSigninFail));
+      isSigninFail = false;
+    }
+  }
+
+  Future<void> signinWithGoogle() async {
+    final data = await service.googleSignin(firebaseAuth);
+    if (data is GoogleSigninResponse) {
+      emit(GoogleSigninSuccess(data));
+    } else if (data == null) {
+      emit(GoogleSigninFail());
     }
   }
 
@@ -94,6 +109,12 @@ class LoadingState extends LoginState {
   LoadingState(this.isLoading);
 }
 
+class GoogleSigninSuccess extends LoginState {
+  final GoogleSigninResponse model;
+
+  GoogleSigninSuccess(this.model);
+}
+
 class SigninSuccessful extends LoginState {
   final SigninResponse model;
 
@@ -101,6 +122,8 @@ class SigninSuccessful extends LoginState {
 }
 
 class SigninFail extends LoginState {}
+
+class GoogleSigninFail extends LoginState {}
 
 class SignupFail extends LoginState {}
 

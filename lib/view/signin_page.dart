@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:login/config/page_router.dart';
+import 'package:login/model/signin_response.dart';
 import 'package:login/view/signup_page.dart';
 import '../config/config.dart' as conf;
 import '../config/config.dart';
@@ -348,8 +349,34 @@ class _SigninPageState extends State<SigninPage> {
         child: SizedBox(
           height: 50,
           width: 50,
-          child: GestureDetector(
-            child: Image.asset('assets/images/google.png'),
+          child: BlocConsumer<LoginCubit, LoginState>(
+            listener: (context, state) {
+              if (state is GoogleSigninSuccess) {
+                PageRouter.changePageWithAnimation(
+                  context,
+                  LandingPage(
+                    model: SigninResponse(email: state.model.mail),
+                  ),
+                  PageRouter.leftToRight,
+                );
+              } else if (state is GoogleSigninFail) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: const Text('Google Authentication Failed!'),
+                  action: SnackBarAction(
+                    label: 'Close',
+                    onPressed: () {},
+                  ),
+                ));
+              }
+            },
+            builder: (context, state) {
+              return GestureDetector(
+                child: Image.asset('assets/images/google.png'),
+                onTap: () {
+                  context.read<LoginCubit>().signinWithGoogle();
+                },
+              );
+            },
           ),
         ),
       ),
