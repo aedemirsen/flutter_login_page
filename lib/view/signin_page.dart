@@ -267,6 +267,7 @@ class _SigninPageState extends State<SigninPage> {
             context,
             LandingPage(
               model: state.model,
+              loginType: "email",
             ),
             PageRouter.leftToRight,
           );
@@ -354,6 +355,7 @@ class _SigninPageState extends State<SigninPage> {
                   context,
                   LandingPage(
                     model: SigninResponse(email: state.model.mail),
+                    loginType: "google",
                   ),
                   PageRouter.leftToRight,
                 );

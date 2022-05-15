@@ -87,4 +87,19 @@ class Service extends IService {
     }
     return null;
   }
+
+  @override
+  Future<bool> googleSignOut() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+
+    try {
+      if (!kIsWeb) {
+        await googleSignIn.signOut();
+      }
+      await FirebaseAuth.instance.signOut();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }

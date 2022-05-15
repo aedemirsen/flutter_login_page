@@ -19,4 +19,6 @@ abstract class IService {
   Future<SignUpResponse?> postUserSignUp(SignupRequest model);
 
   Future<GoogleSigninResponse?> googleSignin(FirebaseAuth auth);
+
+  Future<bool> googleSignOut();
 }

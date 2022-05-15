@@ -353,13 +353,15 @@ class _SignupPageState extends State<SignupPage> {
           await Future.delayed(const Duration(seconds: 2));
           Navigator.pop(context);
         } else if (state is SignupFail) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text('Signup Fail'),
-            action: SnackBarAction(
-              label: 'Close',
-              onPressed: () {},
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Signup Fail'),
+              action: SnackBarAction(
+                label: 'Close',
+                onPressed: () {},
+              ),
             ),
-          ));
+          );
         }
       },
       builder: (context, state) {

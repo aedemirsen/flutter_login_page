@@ -81,6 +81,13 @@ class LoginCubit extends Cubit<LoginState> {
     }
   }
 
+  Future<void> signoutWithGoogle() async {
+    final data = await service.googleSignOut();
+    if (data) {
+      emit(GoogleSignoutSuccess());
+    }
+  }
+
   void changeLoadingView(bool b) {
     isLoading = b;
     emit(LoadingState(isLoading));
@@ -114,6 +121,8 @@ class GoogleSigninSuccess extends LoginState {
 
   GoogleSigninSuccess(this.model);
 }
+
+class GoogleSignoutSuccess extends LoginState {}
 
 class SigninSuccessful extends LoginState {
   final SigninResponse model;
