@@ -1,14 +1,12 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:login/config/page_router.dart';
 import 'package:login/model/signin_response.dart';
 import 'package:login/view/signup_page.dart';
 import '../config/config.dart' as conf;
 import '../config/config.dart';
-import 'package:bloc/bloc.dart';
 
 import '../cubit/cubit.dart';
 import 'landing_page.dart';
